@@ -1,10 +1,3 @@
-# 数据预处理工具集
-
-## 运行方式
-```bash
-streamlit run 首页.py
-```
-
 ## 现有功能
 - **Excel表头清洗** - 删除标题，处理多行表头
 - **Excel主体清洗** - 提取表格主体信息  
@@ -28,7 +21,10 @@ st.set_page_config(page_title="功能名称", layout="centered")
 apply_custom_style()  # 必须调用，统一样式
 
 st.title("🔧 功能名称")
-# 具体功能代码...
+# 具体功能代码...（**开发时，编码合理、结构和流程清晰，代码尽量简洁、精简**）
 ```
 
-**开发要求**：代码尽量简洁，功能直接有效
+## 项目运行方式
+```bash
+streamlit run 首页.py
+```
