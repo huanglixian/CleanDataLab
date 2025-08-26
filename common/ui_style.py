@@ -20,7 +20,7 @@ def apply_custom_style():
         font-size: 26px;
         font-weight: 900;
         color: #5A7A8B;
-        text-align: right;
+        text-align: left;
         width: 100%;
     }
 
