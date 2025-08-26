@@ -3,7 +3,7 @@ from common.ui_style import apply_custom_style
 
 def main():
     st.set_page_config(
-        page_title="广东院-数据预处理-工具集",
+        page_title="数据预处理-工具集",
         page_icon="🛠️",
         layout="centered",
         initial_sidebar_state="auto"
