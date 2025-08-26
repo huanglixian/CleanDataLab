@@ -41,9 +41,9 @@ def main():
     """)
     
     # 版本信息
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("**版本信息**")
-    st.sidebar.info("Excel工具集 v1.0\n\n包含3个数据处理工具")
+    #st.sidebar.markdown("---")
+    #st.sidebar.markdown("**版本信息**")
+    #st.sidebar.info("Excel工具集 v1.0\n\n包含3个数据处理工具")
 
 if __name__ == "__main__":
     main()
