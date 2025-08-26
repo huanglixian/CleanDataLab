@@ -14,7 +14,7 @@ def apply_custom_style():
     <style>
     /* 在顶栏添加应用标题 */
     [data-testid="stHeader"]::before {
-        content: "🛠️ 广东院-数据预处理-工具集";
+        content: "🛠️ 数据预处理-工具集";
         display: block;
         padding: 12px 20px;
         font-size: 26px;
