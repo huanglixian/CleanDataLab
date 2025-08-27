@@ -45,11 +45,16 @@ def apply_custom_style():
         position: relative;
     }
     
-    /* 导航栏右侧软件标题 */
-    .stAppHeader::after {
-        content: "数据预处理工具集";
+    /* 为导航栏标题预留空间 */
+    .stAppHeader > div {
+        padding-left: 200px !important;
+    }
+    
+    /* 导航栏左侧软件标题 */
+    .stAppHeader::before {
+        content: "🛠️ 数据预处理工具集";
         position: absolute;
-        right: 20px;
+        left: 20px;
         top: 50%;
         transform: translateY(-50%);
         font-size: 18px;
@@ -59,6 +64,7 @@ def apply_custom_style():
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        white-space: nowrap;
     }
     
     /* 按钮样式 */
