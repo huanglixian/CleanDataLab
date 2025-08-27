@@ -31,7 +31,7 @@ def apply_custom_style():
     
     /* 减少页面顶部留白 */
     .block-container {
-        padding-top: 3rem;
+        padding-top: 1rem; 
     }
     
     /* 主体背景 - 白色 */
@@ -42,6 +42,23 @@ def apply_custom_style():
     /* 顶栏浅灰色背景 */
     .stAppHeader {
         background: linear-gradient(135deg, #f8fafb 0%, #f4f7f9 100%);
+        position: relative;
+    }
+    
+    /* 导航栏右侧软件标题 */
+    .stAppHeader::after {
+        content: "数据预处理工具集";
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        font-weight: 600;
+        color: #4A6B7D;
+        background: linear-gradient(45deg, #5A7A8B, #7B98AA);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
     
     /* 按钮样式 */

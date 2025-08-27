@@ -9,7 +9,7 @@ st.set_page_config(
 )
 
 # 在左上角显示应用标题logo
-st.logo("logo.svg")
+# st.logo("logo.svg")
 
 nav = get_nav_from_toml(".streamlit/pages.toml")
 pg = st.navigation(nav, position="top")
