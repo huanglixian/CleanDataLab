@@ -1,0 +1,14 @@
+[[pages]]
+name = "Excel工具"
+icon = "📊"
+is_section = true
+
+[[pages]]
+name = "Excel-Sheet拆分"
+icon = "📄"
+path = "pages/Excel-Sheet拆分.py"
+
+[[pages]]
+name = "Excel标题与表头清洗"
+icon = "🧹"
+path = "pages/Excel标题与表头清洗.py"

@@ -1,0 +1,16 @@
+# Streamlit 配置文件 - 隐藏UI元素和优化体验
+
+[browser]
+gatherUsageStats = false  # 不收集使用统计数据
+
+[server]
+# enableCORS = false        # 关闭跨域资源共享
+# headless = true         # 显示完整UI，包括顶栏标题
+
+[ui]
+# hideTopBar = true        # 隐藏顶部栏的三点菜单
+hideSidebarNav = false   # 保持侧边栏导航可见
+
+[client]
+showErrorDetails = false # 隐藏详细错误信息
+toolbarMode = "minimal"  # ⭐核心参数 - 最小化工具栏模式，隐藏Deploy和三点菜单

@@ -9,20 +9,12 @@ def apply_custom_style():
     - 辅助色：#7B98AA（柔和蓝灰）  
     - 强调色：#4A6B7D（深度蓝灰）
     - 边框色：#A8BCC8（淡雅蓝灰）
+    - 深灰调：#3D5A6B（偏灰深蓝）
+    - 中蓝调：#476B84（偏蓝中灰）
+    - 暗蓝调：#2F4A5C（深邃蓝灰）
     """
     st.markdown("""
     <style>
-    /* 在顶栏添加应用标题 */
-    [data-testid="stHeader"]::before {
-        content: "🛠️ 数据预处理-工具集";
-        display: block;
-        padding: 12px 20px;
-        font-size: 26px;
-        font-weight: 900;
-        color: #5A7A8B;
-        text-align: left;
-        width: 100%;
-    }
 
     
     /* 页面标题统一样式 */
@@ -64,6 +56,18 @@ def apply_custom_style():
     }
     .stButton > button:hover { 
         background: linear-gradient(45deg, #4A6B7D, #5A7A8B); 
+    }
+    
+    /* Primary按钮样式 */
+    .stButton > button[kind="primary"], 
+    .stDownloadButton > button[kind="primary"] { 
+        background: linear-gradient(45deg, #476B84, #5A7A8B) !important; 
+        color: white !important; 
+        border: none !important;
+    }
+    .stButton > button[kind="primary"]:hover, 
+    .stDownloadButton > button[kind="primary"]:hover { 
+        background: linear-gradient(45deg, #3D5A6B, #476B84) !important; 
     }
     
     /* 文件上传框 */

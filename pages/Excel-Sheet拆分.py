@@ -159,8 +159,9 @@ def main():
     st.set_page_config(page_title="Excel Sheet 拆分工具", page_icon="📄", layout="centered")
     apply_custom_style()
     
-    st.title("📄 Excel Sheet 拆分工具")
-    st.markdown("将多个 Sheet 的 Excel 文件拆分为独立的 Excel 文件")
+    # st.title("📄 Excel Sheet 拆分工具")
+    # st.markdown("将多个 Sheet 的 Excel 文件拆分为独立的 Excel 文件")
+    # st.markdown("---")
     
     mode = st.radio(
         "选择操作模式",
