@@ -15,8 +15,6 @@ def apply_custom_style():
     """
     st.markdown("""
     <style>
-
-    
     /* 页面标题统一样式 */
     h1, [data-testid="stMarkdownContainer"] h1 { 
         font-size: 24px !important;
@@ -54,6 +52,7 @@ def apply_custom_style():
         border-radius: 8px; 
         font-weight: 500; 
     }
+    /* 按钮悬停效果 */
     .stButton > button:hover { 
         background: linear-gradient(45deg, #4A6B7D, #5A7A8B); 
     }
@@ -65,6 +64,7 @@ def apply_custom_style():
         color: white !important; 
         border: none !important;
     }
+    /* Primary按钮悬停效果 */
     .stButton > button[kind="primary"]:hover, 
     .stDownloadButton > button[kind="primary"]:hover { 
         background: linear-gradient(45deg, #3D5A6B, #476B84) !important; 
@@ -100,6 +100,7 @@ def apply_custom_style():
         color: #4A6B7D;
     }
     
+    /* Radio选中项文字样式 */
     .stRadio > div[role="radiogroup"] > label:has(input:checked) > div[data-testid="stMarkdownContainer"] {
         color: #5A7A8B;
         font-weight: 600;
@@ -111,9 +112,16 @@ def apply_custom_style():
         border: 2px solid #A8BCC8;
     }
     
+    /* Radio选中状态按钮样式 */
     .stRadio > div[role="radiogroup"] > label:has(input:checked) > div:first-child {
         background-color: #5A7A8B;
         border: 2px solid #5A7A8B;
+    }
+    
+    /* 调整横线分隔符的边距 */
+    hr {
+        margin-top: 0.3rem !important;
+        margin-bottom: 1.5rem !important;
     }
     </style>
     """, unsafe_allow_html=True)

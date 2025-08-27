@@ -1,4 +1,24 @@
 [[pages]]
+name = "说明"
+icon = "📖"
+is_section = true
+
+[[pages]]
+name = "软件说明"
+icon = "💡"
+path = "pages/description/software_description.py"
+
+[[pages]]
+name = "开发指南"
+icon = "🛠️"
+path = "pages/description/dev_guide.py"
+
+[[pages]]
+name = "st-pages使用指南"
+icon = "📝"
+path = "pages/description/st_pages_guide.py"
+
+[[pages]]
 name = "Excel工具"
 icon = "📊"
 is_section = true
@@ -6,9 +26,9 @@ is_section = true
 [[pages]]
 name = "Excel-Sheet拆分"
 icon = "📄"
-path = "pages/Excel-Sheet拆分.py"
+path = "pages/excel_tools/excel_sheet_splitter.py"
 
 [[pages]]
 name = "Excel标题与表头清洗"
 icon = "🧹"
-path = "pages/Excel标题与表头清洗.py"
+path = "pages/excel_tools/excel_title_cleaner.py"

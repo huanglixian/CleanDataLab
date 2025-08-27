@@ -146,9 +146,9 @@ def main():
     st.set_page_config(page_title="Excel 标题表头清理工具", page_icon="🧹", layout="centered")
     apply_custom_style()
     
-    # st.title("Excel 标题表头清理工具")
-    # st.markdown("自动删除表格标题，处理多行表头合并和左侧合并单元格填充")
-    # st.markdown("---")
+    st.title("Excel 标题表头清理工具")
+    st.markdown("自动删除表格标题，处理多行表头合并和左侧合并单元格填充")
+    st.markdown("---")
     
     # 核心参数同行
     col1, col2 = st.columns([1, 1])
