@@ -90,5 +90,26 @@ def apply_custom_style():
         background: linear-gradient(45deg, #f0f8f4, #e8f5ec); 
         border-left: 4px solid #5A7A8B; 
     }
+    
+    /* Radio按钮样式优化 - 使用主题色 */
+    .stRadio > div[role="radiogroup"] > label > div[data-testid="stMarkdownContainer"] {
+        color: #4A6B7D;
+    }
+    
+    .stRadio > div[role="radiogroup"] > label:has(input:checked) > div[data-testid="stMarkdownContainer"] {
+        color: #5A7A8B;
+        font-weight: 600;
+    }
+    
+    /* Radio选择按钮颜色 */
+    .stRadio > div[role="radiogroup"] > label > div:first-child {
+        background-color: white;
+        border: 2px solid #A8BCC8;
+    }
+    
+    .stRadio > div[role="radiogroup"] > label:has(input:checked) > div:first-child {
+        background-color: #5A7A8B;
+        border: 2px solid #5A7A8B;
+    }
     </style>
     """, unsafe_allow_html=True)

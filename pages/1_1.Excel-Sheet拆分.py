@@ -164,19 +164,16 @@ def main():
     
     mode = st.radio(
         "选择操作模式",
-        ["📁 批量文件夹拆分", "🔹 单文件拆分"],
+        ["🔹 单文件拆分", "📁 批量文件夹拆分"],
         horizontal=True,
         help="批量模式会自动跳过单sheet文件，完整保留所有样式"
     )
     
     if mode == "📁 批量文件夹拆分":
-        st.markdown("### 📁 批量文件夹拆分")
-        st.info("📝 请复制文件夹的绝对路径到下方输入框")
-        
         folder_path = st.text_input(
-            "文件夹路径",
+            "📁 请输入Excel文件夹路径",
             placeholder="例如: /Users/用户名/Documents/Excel文件夹",
-            help="支持子文件夹递归搜索，自动跳过单sheet文件"
+            help="输入包含Excel文件的文件夹绝对路径，支持子文件夹递归搜索，自动跳过单sheet文件"
         )
         
         if folder_path:
