@@ -7,46 +7,76 @@ from pathlib import Path
 from common.ui_style import apply_custom_style
 
 
-def clean_excel_data(df, title_check_rows=3, max_value_cols=2, header_rows=2):
-    """
-    一站式Excel数据清洗：删除标题、处理表头、填充合并单元格
-    """
-    # 1. 删除标题行
+def excel_col_to_index(col_str):
+    """Excel列名转索引 A->0, B->1"""
+    result = 0
+    for char in col_str.upper():
+        result = result * 26 + (ord(char) - ord('A') + 1)
+    return result - 1
+
+def index_to_excel_col(index):
+    """索引转Excel列名 0->A, 1->B"""
+    result = ""
+    while index >= 0:
+        result = chr(index % 26 + ord('A')) + result
+        index = index // 26 - 1
+    return result
+
+def detect_data_boundary(df):
+    """检测数据边界"""
+    start_col = 0
+    end_col = df.shape[1] - 1
+    body_end_row = df.shape[0]
+    return start_col, end_col, body_end_row
+
+def get_excel_files(folder_path):
+    """获取文件夹中所有Excel文件"""
+    excel_files = []
+    for ext in ['*.xlsx', '*.xls']:
+        excel_files.extend(glob.glob(f"{folder_path}/**/{ext}", recursive=True))
+    return excel_files
+
+def clean_excel_data(df, start_col, end_col, body_end_row, title_check_rows=3, max_value_cols=2, header_rows=2):
+    """清洗指定区域的Excel数据"""
+    # 选择指定区域
+    selected_df = df.iloc[:body_end_row, start_col:end_col+1].copy()
+    
+    # 删除标题行
     removed_title_rows = 0
-    for i in range(min(title_check_rows, len(df))):
-        if df.iloc[i].notna().sum() <= max_value_cols:
+    for i in range(min(title_check_rows, len(selected_df))):
+        if selected_df.iloc[i].notna().sum() <= max_value_cols:
             removed_title_rows += 1
         else:
             break
     
     if removed_title_rows > 0:
-        df = df.drop(df.index[:removed_title_rows]).reset_index(drop=True)
+        selected_df = selected_df.drop(selected_df.index[:removed_title_rows]).reset_index(drop=True)
     
-    # 2. 处理表头
-    if len(df) >= header_rows:
-        header_data = [df.iloc[i].ffill() for i in range(header_rows)]
+    # 处理表头
+    if len(selected_df) >= header_rows:
+        header_data = [selected_df.iloc[i].ffill() for i in range(header_rows)]
         new_headers = []
-        for col_idx in range(len(df.columns)):
+        for col_idx in range(len(selected_df.columns)):
             parts = [str(header_data[i].iloc[col_idx]) for i in range(header_rows) 
                     if pd.notna(header_data[i].iloc[col_idx]) and str(header_data[i].iloc[col_idx])]
-            unique_parts = list(dict.fromkeys(parts))  # 去重保持顺序
+            unique_parts = list(dict.fromkeys(parts))
             new_headers.append("-".join(unique_parts) if unique_parts else f"Col_{col_idx}")
         
-        df = df.iloc[header_rows:].copy()
-        if not df.empty:
-            df.columns = new_headers[:len(df.columns)]
+        selected_df = selected_df.iloc[header_rows:].copy()
+        if not selected_df.empty:
+            selected_df.columns = new_headers[:len(selected_df.columns)]
     
-    # 3. 填充左侧合并单元格
-    for col_idx in range(len(df.columns)):
-        col_data = df.iloc[:, col_idx]
+    # 填充左侧合并单元格
+    for col_idx in range(len(selected_df.columns)):
+        col_data = selected_df.iloc[:, col_idx]
         if col_data.isna().any() and col_data.count() > 0:
             non_null_ratio = col_data.count() / len(col_data)
             if non_null_ratio < 0.8 or (col_idx == 0 and pd.notna(col_data.iloc[0])):
-                df.iloc[:, col_idx] = col_data.ffill()
+                selected_df.iloc[:, col_idx] = col_data.ffill()
         elif col_idx > 0 and col_data.count() == len(col_data):
             break
     
-    return df, removed_title_rows
+    return selected_df
 
 def generate_downloads(cleaned_df):
     """生成Excel和JSON下载文件"""
@@ -56,14 +86,8 @@ def generate_downloads(cleaned_df):
     json_data = cleaned_df.to_json(orient='records', force_ascii=False, indent=2)
     return excel_buffer, json_data
 
-def process_batch_files(folder_path, title_check_rows, max_value_cols, header_rows):
-    """批量处理文件夹中的Excel文件"""
-    excel_files = []
-    for ext in ['*.xlsx', '*.xls']:
-        excel_files.extend(glob.glob(f"{folder_path}/**/{ext}", recursive=True))
-    
-    if not excel_files:
-        return None, "📂 未找到Excel文件"
+def process_batch_files(excel_files, title_check_rows, max_value_cols, header_rows):
+    """批量处理Excel文件列表"""
     
     zip_buffer = io.BytesIO()
     results = []
@@ -72,7 +96,9 @@ def process_batch_files(folder_path, title_check_rows, max_value_cols, header_ro
         for file_path in excel_files:
             try:
                 df = pd.read_excel(file_path, header=None)
-                cleaned_df, removed_title_rows = clean_excel_data(df, title_check_rows, max_value_cols, header_rows)
+                # 检测数据边界
+                start_col, end_col, body_end_row = detect_data_boundary(df)
+                cleaned_df = clean_excel_data(df, start_col, end_col, body_end_row, title_check_rows, max_value_cols, header_rows)
                 
                 # 保存文件到ZIP
                 original_name = Path(file_path).stem
@@ -80,17 +106,19 @@ def process_batch_files(folder_path, title_check_rows, max_value_cols, header_ro
                 zipf.writestr(f"excel/{original_name}_clean.xlsx", excel_buffer.getvalue())
                 zipf.writestr(f"json/{original_name}_clean.json", json_data)
                 
-                results.append([Path(file_path).name, df.shape[0], removed_title_rows, cleaned_df.shape[0], "✅ 成功"])
+                # 结果记录包含边界信息
+                boundary_info = f"{index_to_excel_col(start_col)}-{index_to_excel_col(end_col)}列,{body_end_row}行"
+                results.append([Path(file_path).name, boundary_info, df.shape[0], cleaned_df.shape[0], "✅ 成功"])
                 
             except Exception as e:
-                results.append([Path(file_path).name, 0, 0, 0, f"❌ {str(e)[:15]}..."])
+                results.append([Path(file_path).name, "检测失败", 0, 0, f"❌ {str(e)[:15]}..."])
     
     return zip_buffer, results
 
 def display_results(results, zip_buffer=None, folder_name=None):
     """显示处理结果和统计信息"""
     st.subheader("📦 处理结果")
-    result_df = pd.DataFrame(results, columns=['文件名', '原始行数', '删除标题行数', '最终行数', '状态'])
+    result_df = pd.DataFrame(results, columns=['文件名', '处理区域', '原始行数', '最终行数', '状态'])
     st.dataframe(result_df, use_container_width=True, hide_index=True)
     
     # 统计信息
@@ -148,34 +176,60 @@ def main():
             help="输入包含Excel文件的文件夹绝对路径，支持递归搜索子文件夹"
         )
         
-        if folder_path and st.button("🧹 开始批量清理", type="primary"):
-            if Path(folder_path).exists():
-                with st.spinner("正在批量处理Excel文件..."):
-                    zip_buffer, results = process_batch_files(folder_path, title_check_rows, max_value_cols, header_rows)
+        if folder_path and Path(folder_path).exists():
+            excel_files = get_excel_files(folder_path)
+            
+            if excel_files:
+                # 表格预览：检测每个文件的边界
+                st.subheader("📋 批量处理预览")
+                preview_data = []
+                with st.spinner("正在检测文件边界..."):
+                    for file_path in excel_files:
+                        try:
+                            df = pd.read_excel(file_path, header=None, nrows=50)  # 只读50行用于边界检测
+                            start_col, end_col, body_end_row = detect_data_boundary(df)
+                            boundary_info = f"{index_to_excel_col(start_col)}-{index_to_excel_col(end_col)}"
+                            preview_data.append([Path(file_path).name, boundary_info, df.shape[0], df.shape[1]])
+                        except Exception:
+                            preview_data.append([Path(file_path).name, "检测失败", 0, 0])
                 
-                if isinstance(results, str):
-                    st.warning(results)
-                else:
+                preview_df = pd.DataFrame(preview_data, columns=['文件名', '检测边界', '行数', '列数'])
+                st.dataframe(preview_df, use_container_width=True, hide_index=True)
+                st.info(f"共发现 {len(excel_files)} 个Excel文件")
+                
+                # 确认处理按钮
+                if st.button("🧹 确认批量清洗", type="primary"):
+                    with st.spinner("正在批量处理Excel文件..."):
+                        zip_buffer, results = process_batch_files(excel_files, title_check_rows, max_value_cols, header_rows)
+                    
                     st.success("✅ 批量处理完成！")
                     display_results(results, zip_buffer, Path(folder_path).name)
             else:
-                st.error("❌ 文件夹路径不存在，请检查路径是否正确")
+                st.warning("📂 文件夹中未找到Excel文件")
+        elif folder_path:
+            st.error("❌ 文件夹路径不存在")
     
     else:  # 🔹 单文件处理
         uploaded_file = st.file_uploader("选择Excel文件", type=['xlsx', 'xls'], help="支持.xlsx和.xls格式")
         
         if uploaded_file:
             try:
-                df = pd.read_excel(uploaded_file, header=None)  # 只读取一次
+                df = pd.read_excel(uploaded_file, header=None)
+                start_col, end_col, body_end_row = detect_data_boundary(df)
                 
-                # 显示预览
                 st.subheader("数据预览")
                 st.dataframe(df.head(10), use_container_width=True)
                 st.info(f"数据维度: {df.shape[0]} 行 × {df.shape[1]} 列")
                 
-                if st.button("🧹 开始清理", type="primary"):
+                # 简化的区域调整
+                col1, col2, col3 = st.columns(3)
+                start_col = excel_col_to_index(col1.text_input("起始列", index_to_excel_col(start_col)).upper())
+                end_col = excel_col_to_index(col2.text_input("终止列", index_to_excel_col(end_col)).upper())
+                body_end_row = col3.number_input("表体结束行", 1, df.shape[0], body_end_row)
+                
+                if st.button("🧹 开始清洗", type="primary"):
                     with st.spinner("正在处理中..."):
-                        cleaned_df, removed_title_rows = clean_excel_data(df, title_check_rows, max_value_cols, header_rows)
+                        cleaned_df = clean_excel_data(df, start_col, end_col, body_end_row, title_check_rows, max_value_cols, header_rows)
                     
                     st.success("✅ 清洗完成！")
                     
