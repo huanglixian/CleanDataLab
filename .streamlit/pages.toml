@@ -32,3 +32,13 @@ path = "pages/excel_tools/excel_sheet_splitter.py"
 name = "Excel标题与表头清洗"
 icon = "🧹"
 path = "pages/excel_tools/excel_title_cleaner.py"
+
+[[pages]]
+name = "Word工具"
+icon = "📄"
+is_section = true
+
+[[pages]]
+name = "DOC转DOCX"
+icon = "🔄"
+path = "pages/word_tools/word_to_docx.py"

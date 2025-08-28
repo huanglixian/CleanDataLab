@@ -28,6 +28,10 @@ def apply_custom_style():
         font-size: 22px !important;
         color: #4A6B7D !important;
     }
+    h4, [data-testid="stMarkdownContainer"] h4 {
+        font-size: 20px !important;
+        color: #5A7A8B !important;
+    }
     
     /* 减少页面顶部留白 */
     .block-container {
