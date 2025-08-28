@@ -5,17 +5,17 @@ is_section = true
 
 [[pages]]
 name = "软件说明"
-icon = "💡"
+icon = "📖"
 path = "pages/description/software_description.py"
 
 [[pages]]
 name = "开发指南"
-icon = "🛠️"
+icon = "📖"
 path = "pages/description/dev_guide.py"
 
 [[pages]]
 name = "st-pages使用指南"
-icon = "📝"
+icon = "📖"
 path = "pages/description/st_pages_guide.py"
 
 [[pages]]
@@ -25,12 +25,12 @@ is_section = true
 
 [[pages]]
 name = "Excel-Sheet拆分"
-icon = "📄"
+icon = "📊"
 path = "pages/excel_tools/excel_sheet_splitter.py"
 
 [[pages]]
 name = "Excel标题与表头清洗"
-icon = "🧹"
+icon = "📊"
 path = "pages/excel_tools/excel_title_cleaner.py"
 
 [[pages]]
@@ -40,5 +40,10 @@ is_section = true
 
 [[pages]]
 name = "DOC转DOCX"
-icon = "🔄"
+icon = "📄"
 path = "pages/word_tools/word_to_docx.py"
+
+[[pages]]
+name = "PDF工具"
+icon = "📋"
+is_section = true
