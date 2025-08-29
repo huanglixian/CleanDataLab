@@ -150,5 +150,16 @@ def apply_custom_style():
         margin-top: 0.3rem !important;
         margin-bottom: 1.5rem !important;
     }
-    </style>
+    
+    /* Secondary按钮样式 - 柔和蓝灰色 */
+    .stButton > button[kind="secondary"] {
+        background: #7B98AA !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+    }
+    .stButton > button[kind="secondary"]:hover {
+        background: #6B8899 !important;
+    }
     """, unsafe_allow_html=True)

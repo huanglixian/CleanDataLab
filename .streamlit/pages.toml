@@ -24,6 +24,11 @@ icon = "📊"
 is_section = true
 
 [[pages]]
+name = "XLS转XLSX工具"
+icon = "📊"
+path = "pages/excel_tools/xls_to_xlsx.py"
+
+[[pages]]
 name = "Excel-Sheet拆分"
 icon = "📊"
 path = "pages/excel_tools/excel_sheet_splitter.py"
@@ -39,7 +44,7 @@ icon = "📄"
 is_section = true
 
 [[pages]]
-name = "DOC转DOCX"
+name = "DOC转DOCX工具"
 icon = "📄"
 path = "pages/word_tools/word_to_docx.py"
 
