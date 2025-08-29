@@ -27,3 +27,11 @@
 
 ###  三、📋 PDF工具集
 **构建中**
+
+
+## 🛠️ 技术架构
+
+- **前端框架**：Streamlit 多页应用
+- **样式管理**：统一UI样式库 (`common/ui_style.py`)
+- **数据处理**：pandas、openpyxl等Python库
+- **转换引擎**：LibreOffice
