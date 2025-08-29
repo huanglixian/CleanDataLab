@@ -50,14 +50,13 @@ def main():
                     status_placeholder.info("🔄 正在转换中...")
                 elif task_status == "completed":
                     status_placeholder.success("✅ 转换完成")
+                    conversion_results = lo_queue.wait_for_task(task_id)
                     break
                 else:
+                    conversion_results = None
                     break
                 
                 time.sleep(1)
-            
-            # 等待转换结果
-            conversion_results = lo_queue.wait_for_task(task_id)
             
             if conversion_results:
                 zip_buffer = io.BytesIO()

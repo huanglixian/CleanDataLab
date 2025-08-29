@@ -38,8 +38,10 @@ class LibreOfficeQueue:
                     
                     task['result'] = self._convert_batch(task['files_data'], task['source_ext'], task['target_ext'])
                     task['status'] = "completed"
+                    task['completed_time'] = time.time()
                 self.task_queue.task_done()
             except queue.Empty:
+                self._cleanup_stale_tasks()
                 continue
     
     def _convert_batch(self, files_data, source_ext, target_ext):
@@ -86,7 +88,8 @@ class LibreOfficeQueue:
             'source_ext': source_ext,
             'target_ext': target_ext,
             'status': 'waiting',
-            'result': None
+            'result': None,
+            'created_time': time.time()
         }
         
         with self._lock:
@@ -119,13 +122,37 @@ class LibreOfficeQueue:
         while time.time() - start_time < timeout:
             task = self.active_tasks.get(task_id)
             if task and task['status'] == "completed":
-                # 获取结果并清理任务
                 result = task['result']
-                with self._lock:
-                    self.active_tasks.pop(task_id, None)
+                self._cleanup_task(task_id)
                 return result
             time.sleep(0.2)
+        
+        # 超时清理
+        self._cleanup_task(task_id)
         return None
+    
+    def _cleanup_task(self, task_id: str):
+        """清理单个任务"""
+        with self._lock:
+            self.active_tasks.pop(task_id, None)
+            if task_id in self.task_order:
+                self.task_order.remove(task_id)
+    
+    def _cleanup_stale_tasks(self):
+        """清理过期任务"""
+        current_time = time.time()
+        with self._lock:
+            stale_tasks = []
+            for task_id, task in self.active_tasks.items():
+                # 清理超过10分钟的waiting任务或超过1小时的completed任务
+                if (task['status'] == 'waiting' and current_time - task.get('created_time', current_time) > 600) or \
+                   (task['status'] == 'completed' and current_time - task.get('completed_time', current_time) > 3600):
+                    stale_tasks.append(task_id)
+            
+            for task_id in stale_tasks:
+                self.active_tasks.pop(task_id, None)
+                if task_id in self.task_order:
+                    self.task_order.remove(task_id)
     
     def get_queue_size(self):
         """获取当前队列大小"""
