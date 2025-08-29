@@ -62,3 +62,8 @@ path = "pages/word_tools/word_clean.py"
 name = "PDF工具"
 icon = "📋"
 is_section = true
+
+[[pages]]
+name = "PDF转Markdown工具"
+icon = "📋"
+path = "pages/pdf_tools/pdf_to_markdown.py"

@@ -3,3 +3,4 @@ st-pages
 pandas
 openpyxl
 python-docx
+pymupdf4llm
