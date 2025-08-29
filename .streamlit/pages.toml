@@ -49,6 +49,11 @@ icon = "📄"
 path = "pages/word_tools/word_to_docx.py"
 
 [[pages]]
+name = "DOCX页眉、页脚清理"
+icon = "🧹"
+path = "pages/word_tools/word_clean.py"
+
+[[pages]]
 name = "PDF工具"
 icon = "📋"
 is_section = true

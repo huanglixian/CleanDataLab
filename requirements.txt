@@ -2,3 +2,4 @@ streamlit
 st-pages
 pandas
 openpyxl
+python-docx

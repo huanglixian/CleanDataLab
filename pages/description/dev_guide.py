@@ -26,8 +26,9 @@ st.markdown("""
 ### 3. 导入统一样式
 **必须导入统一样式**：`from common.ui_style import apply_custom_style`
             
-### 4. 对新应用进行说明
-**更新readme.md**：应用创建后，需要更新根目录下的`readme.md`文件，添加应用说明
+### 4. 对新应用增加说明
+（1）**更新readme.md**：应用创建后，需要更新根目录下的`readme.md`文件，添加应用说明
+（2）**补充依赖**：在`requirements.txt`中添加依赖
 
 ## 📝 页面模板
 ```python
