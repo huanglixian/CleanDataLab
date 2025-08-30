@@ -48,3 +48,8 @@
 - **样式管理**：统一UI样式库 (`common/ui_style.py`)
 - **数据处理**：pandas、openpyxl等Python库
 - **转换引擎**：LibreOffice
+
+## 🚀 项目运行
+```bash
+streamlit run app.py
+```

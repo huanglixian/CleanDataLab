@@ -33,7 +33,12 @@ def main():
         file_count = len(uploaded_files)
         st.info(f"📄 已选择 {file_count} 个Word文件")
         
-        if st.button("🔄 开始转换", type="primary", use_container_width=True):
+        if st.button("🔄 开始转换", type="primary", use_container_width=True, disabled="task_running" in st.session_state):
+            st.session_state.task_running = True
+            st.rerun()
+        
+        # 处理任务
+        if st.session_state.get('task_running') and not st.session_state.get('result'):
             files_data = [(file.name, file.getvalue()) for file in uploaded_files]
             task_id = lo_queue.submit_task(files_data, 'docx', 'pdf')
             
@@ -97,7 +102,8 @@ def main():
                 with col2:
                     if st.button("🔄 重置页面", type="secondary", use_container_width=True):
                         st.session_state.key += 1
-                        del st.session_state.result
+                        st.session_state.pop('result', None)
+                        st.session_state.pop('task_running', None)
                         st.rerun()
 
 

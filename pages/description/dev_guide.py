@@ -25,8 +25,14 @@ st.markdown("""
 
 ### 3. 导入统一样式
 **必须导入统一样式**：`from common.ui_style import apply_custom_style`
+
+### 4. 添加队列和交互优化
+- **选择队列**：LibreOffice任务用 `lo_queue`，其他文件处理用 `fp_queue`
+- **按钮防误点击**：转换按钮加 `disabled="task_running" in st.session_state`，点击时设置状态并刷新
+- **添加重置按钮**：下载区域添加重置按钮，清理 `result` 和 `task_running` 状态
+- **文件上传器重置**：使用 `key=f"uploader_{st.session_state.key}"` 实现重置
             
-### 4. 对新应用增加说明
+### 5. 对新应用增加说明
 （1）**更新readme.md**：应用创建后，需要更新根目录下的`readme.md`文件，添加应用说明
 （2）**补充依赖**：在`requirements.txt`中添加依赖
 
@@ -87,14 +93,8 @@ DataSpace/
 ```
 
 ## 🔧 开发建议
-- 代码简洁，结构清晰
-- 如果函数只用一次，不要过度抽象和复杂化
-- 使用统一的色彩搭配
-- 保持一致的交互体验
+- 使用统一的色彩搭配（common/ui_style.py）
+- 保持一致的交互模式（队列、按钮防误点击、重置按钮）
 - 添加简洁且必要的注释
-            
-## 🚀 项目运行
-```bash
-streamlit run app.py
-```
-""")
+- 最后这一点是最重要的！！！在生成代码时，先保证简单清晰（KISS），不要提前做没必要的抽象（YAGNI）；只有在出现明显重复逻辑时，才考虑抽象成 公共方法（DRY）
+""")            
