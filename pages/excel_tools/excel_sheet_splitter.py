@@ -6,8 +6,10 @@ import io
 import zipfile
 import shutil
 import tempfile
+import time
 from datetime import datetime
 from common.ui_style import apply_custom_style
+from common.file_processing_queue import fp_queue
 
 
 def split_excel_file(file_data, file_name, zip_writer=None):
@@ -53,23 +55,13 @@ def split_excel_file(file_data, file_name, zip_writer=None):
 
 
 
-def process_files(files_data):
-    """处理所有文件并返回ZIP"""
+def process_files_batch(files_data):
+    """批处理文件并返回结果"""
     zip_buffer = io.BytesIO()
     results = []
-    total_files = len(files_data)
-    
-    # 创建进度条
-    progress_bar = st.progress(0)
-    status_text = st.empty()
     
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for i, (file_data, file_name) in enumerate(files_data):
-            # 更新进度
-            progress = (i + 1) / total_files
-            progress_bar.progress(progress)
-            status_text.text(f"正在处理: {file_name} ({i + 1}/{total_files})")
-            
+        for file_data, file_name in files_data:
             try:
                 sheet_count = split_excel_file(file_data, file_name, zipf)
                 if sheet_count == 0:
@@ -78,10 +70,6 @@ def process_files(files_data):
                     results.append([file_name, sheet_count, f'✅ 已拆分({sheet_count}个sheet)'])
             except Exception as e:
                 results.append([file_name, 0, f'❌ {str(e)[:15]}...'])
-    
-    # 清除进度显示
-    progress_bar.empty()
-    status_text.empty()
     
     return zip_buffer, results
 
@@ -110,7 +98,7 @@ def main():
         processable_count = 0
         
         for file in uploaded_files:
-            sheet_count = split_excel_file(file, file.name)  # 复用函数获取sheet数量
+            sheet_count = split_excel_file(file, file.name)
             size = len(file.getvalue()) / 1024
             
             if sheet_count > 1:
@@ -129,27 +117,52 @@ def main():
         
         if st.button("🔄 开始拆分", type="primary", use_container_width=True):
             files_data = [(f, f.name) for f in uploaded_files]
-            zip_buffer, results = process_files(files_data)
+            task_id = fp_queue.submit_task(files_data, process_files_batch)
             
-            st.success("✅ 拆分完成!")
+            # 状态显示
+            status_placeholder = st.empty()
             
-            # 显示结果和统计
-            st.dataframe(pd.DataFrame(results, columns=['文件名', 'Sheet数量', '状态']), use_container_width=True, hide_index=True)
+            while True:
+                position = fp_queue.get_task_position(task_id)
+                task_status = fp_queue.get_task_status(task_id)
+                
+                if position > 0:
+                    status_placeholder.warning(f"⏳ 排队中，第 {position} 位")
+                elif task_status == "processing":
+                    status_placeholder.info("🔄 正在拆分中...")
+                elif task_status == "completed":
+                    status_placeholder.success("✅ 拆分完成")
+                    zip_buffer, results = fp_queue.wait_for_task(task_id)
+                    break
+                else:
+                    zip_buffer, results = None, None
+                    break
+                
+                time.sleep(1)
             
-            processed = sum(1 for r in results if r[2].startswith('✅'))
-            skipped = sum(1 for r in results if r[2].startswith('⏩'))
-            failed = sum(1 for r in results if r[2].startswith('❌'))
-            
-            col1, col2, col3 = st.columns(3)
-            col1.metric("已拆分", processed)
-            col2.metric("已跳过", skipped)
-            col3.metric("失败", failed)
-            
-            # 下载
-            if processed > 0:
-                timestamp = datetime.now().strftime("%Y%m%d%H%M")
-                filename = f"excel_sheet_拆分_{timestamp}.zip"
-                st.download_button("📥 下载拆分文件", zip_buffer.getvalue(), filename, "application/zip", type="primary", use_container_width=True)
+            if zip_buffer and results:
+                status_placeholder.empty()
+                st.success("✅ 拆分完成!")
+                
+                # 显示结果和统计
+                st.dataframe(pd.DataFrame(results, columns=['文件名', 'Sheet数量', '状态']), use_container_width=True, hide_index=True)
+                
+                processed = sum(1 for r in results if r[2].startswith('✅'))
+                skipped = sum(1 for r in results if r[2].startswith('⏩'))
+                failed = sum(1 for r in results if r[2].startswith('❌'))
+                
+                col1, col2, col3 = st.columns(3)
+                col1.metric("已拆分", processed)
+                col2.metric("已跳过", skipped)
+                col3.metric("失败", failed)
+                
+                # 下载
+                if processed > 0:
+                    timestamp = datetime.now().strftime("%Y%m%d%H%M")
+                    filename = f"excel_sheet_拆分_{timestamp}.zip"
+                    st.download_button("📥 下载拆分文件", zip_buffer.getvalue(), filename, "application/zip", type="primary", use_container_width=True)
+            else:
+                status_placeholder.error("拆分超时，请重试")
 
 
 if __name__ == "__main__":

@@ -2,9 +2,11 @@ import streamlit as st
 import pandas as pd
 import io
 import zipfile
+import time
 from pathlib import Path
 from datetime import datetime
 from common.ui_style import apply_custom_style
+from common.file_processing_queue import fp_queue
 
 
 def index_to_excel_col(index):
@@ -56,18 +58,16 @@ def clean_excel_data(df, title_check_rows=3, max_value_cols=2, header_rows=2):
 
 
 
-def process_files(files_data, title_check_rows, max_value_cols, header_rows):
-    """处理所有文件并返回ZIP"""
+def process_files_batch(files_data):
+    """批处理文件并返回结果"""
+    title_check_rows, max_value_cols, header_rows = files_data[0][2:5]
+    files_data = [(f, n) for f, n, *_ in files_data]  # 提取文件数据
+    
     zip_buffer = io.BytesIO()
     results = []
-    progress_bar = st.progress(0)
-    status_text = st.empty()
     
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for i, (file_data, file_name) in enumerate(files_data):
-            progress_bar.progress((i + 1) / len(files_data))
-            status_text.text(f"正在清洗: {file_name} ({i + 1}/{len(files_data)})")
-            
+        for file_data, file_name in files_data:
             try:
                 df = pd.read_excel(file_data, header=None)
                 cleaned_df = clean_excel_data(df, title_check_rows, max_value_cols, header_rows)
@@ -88,8 +88,6 @@ def process_files(files_data, title_check_rows, max_value_cols, header_rows):
             except Exception as e:
                 results.append([file_name, "处理失败", 0, 0, f"❌ {str(e)[:15]}..."])
     
-    progress_bar.empty()
-    status_text.empty()
     return zip_buffer, results
 
 
@@ -140,26 +138,49 @@ def main():
                     use_container_width=True, hide_index=True)
         
         if st.button("🧹 开始清洗", type="primary", use_container_width=True):
-            zip_buffer, results = process_files(
-                [(f, f.name) for f in uploaded_files], 
-                title_check_rows, max_value_cols, header_rows
-            )
+            files_data = [(f, f.name, title_check_rows, max_value_cols, header_rows) for f in uploaded_files]
+            task_id = fp_queue.submit_task(files_data, process_files_batch)
             
-            st.success("✅ 清洗完成!")
-            st.dataframe(pd.DataFrame(results, columns=['文件名', '处理区域', '原始行数', '最终行数', '状态']), 
-                        use_container_width=True, hide_index=True)
+            # 状态显示
+            status_placeholder = st.empty()
             
-            success_count = sum(1 for r in results if r[4].startswith('✅'))
-            col1, col2 = st.columns(2)
-            col1.metric("处理成功", success_count)
-            col2.metric("处理失败", len(results) - success_count)
+            while True:
+                position = fp_queue.get_task_position(task_id)
+                task_status = fp_queue.get_task_status(task_id)
+                
+                if position > 0:
+                    status_placeholder.warning(f"⏳ 排队中，第 {position} 位")
+                elif task_status == "processing":
+                    status_placeholder.info("🧹 正在清洗中...")
+                elif task_status == "completed":
+                    status_placeholder.success("✅ 清洗完成")
+                    zip_buffer, results = fp_queue.wait_for_task(task_id)
+                    break
+                else:
+                    zip_buffer, results = None, None
+                    break
+                
+                time.sleep(1)
             
-            if success_count > 0:
-                timestamp = datetime.now().strftime("%Y%m%d%H%M")
-                st.download_button("📥 下载清洗文件", zip_buffer.getvalue(), 
-                                 f"excel_标题清洗_{timestamp}.zip", "application/zip", 
-                                 type="primary", use_container_width=True)
-                st.info("💡 已将Excel和JSON文件分别放在excel和json文件夹中")
+            if zip_buffer and results:
+                status_placeholder.empty()
+                st.success("✅ 清洗完成!")
+                st.dataframe(pd.DataFrame(results, columns=['文件名', '处理区域', '原始行数', '最终行数', '状态']), 
+                            use_container_width=True, hide_index=True)
+                
+                success_count = sum(1 for r in results if r[4].startswith('✅'))
+                col1, col2 = st.columns(2)
+                col1.metric("处理成功", success_count)
+                col2.metric("处理失败", len(results) - success_count)
+                
+                if success_count > 0:
+                    timestamp = datetime.now().strftime("%Y%m%d%H%M")
+                    st.download_button("📥 下载清洗文件", zip_buffer.getvalue(), 
+                                     f"excel_标题清洗_{timestamp}.zip", "application/zip", 
+                                     type="primary", use_container_width=True)
+                    st.info("💡 已将Excel和JSON文件分别放在excel和json文件夹中")
+            else:
+                status_placeholder.error("清洗超时，请重试")
 
 if __name__ == "__main__":
     main()

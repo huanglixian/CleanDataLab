@@ -2,39 +2,57 @@ import streamlit as st
 import io
 import zipfile
 import pandas as pd
+import time
 from pathlib import Path
 from datetime import datetime
 from common.ui_style import apply_custom_style
+from common.file_processing_queue import fp_queue
 
-def convert_pdf_to_markdown(pdf_content, filename):
-    """将PDF内容转换为Markdown"""
+def convert_pdf_to_markdown_safe(pdf_content, filename):
+    """安全地转PDF为Markdown，防止临时文件冲突"""
     try:
         import pymupdf4llm
         import os
         import tempfile
+        import uuid
         
-        # 创建唯一的临时文件
-        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
+        # 使用UUID保证临时文件名唯一
+        unique_id = str(uuid.uuid4())
+        with tempfile.NamedTemporaryFile(suffix=f'_{unique_id}.pdf', delete=False) as temp_file:
             temp_pdf = temp_file.name
             temp_file.write(pdf_content)
         
         try:
-            # 转换为Markdown
             markdown_content = pymupdf4llm.to_markdown(temp_pdf)
             return markdown_content, None
-            
         except Exception as e:
             return None, str(e)[:20]
-        
         finally:
-            # 清理临时文件
             if os.path.exists(temp_pdf):
                 os.remove(temp_pdf)
-        
+    
     except ImportError:
         return None, "缺少pymupdf4llm库"
     except Exception as e:
         return None, str(e)[:20]
+
+def process_files_batch(files_data):
+    """批处理PDF文件并返回结果"""
+    zip_buffer = io.BytesIO()
+    results = []
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for file_name, file_content in files_data:
+            markdown_content, error = convert_pdf_to_markdown_safe(file_content, file_name)
+            
+            if markdown_content:
+                md_filename = f"{Path(file_name).stem}.md"
+                zipf.writestr(md_filename, markdown_content.encode('utf-8'))
+                results.append([file_name, '✅ 转换成功'])
+            else:
+                results.append([file_name, f'❌ {error}'])
+    
+    return zip_buffer, results
 
 def main():
     st.set_page_config(page_title="PDF 转 Markdown 工具", page_icon="📋", layout="centered")
@@ -61,26 +79,35 @@ def main():
         st.info(f"📋 已选择 {file_count} 个PDF文件")
         
         if st.button("🔄 开始转换", type="primary", use_container_width=True):
-            results = []
-            zip_buffer = io.BytesIO()
+            files_data = [(file.name, file.getvalue()) for file in uploaded_files]
+            task_id = fp_queue.submit_task(files_data, process_files_batch)
             
             # 状态显示
             status_placeholder = st.empty()
-            status_placeholder.info("🔄 正在转换中...")
             
-            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                for file in uploaded_files:
-                    markdown_content, error = convert_pdf_to_markdown(file.getvalue(), file.name)
-                    
-                    if markdown_content:
-                        md_filename = f"{Path(file.name).stem}.md"
-                        zipf.writestr(md_filename, markdown_content.encode('utf-8'))
-                        results.append([file.name, '✅ 转换成功'])
-                    else:
-                        results.append([file.name, f'❌ {error}'])
+            while True:
+                position = fp_queue.get_task_position(task_id)
+                task_status = fp_queue.get_task_status(task_id)
+                
+                if position > 0:
+                    status_placeholder.warning(f"⏳ 排队中，第 {position} 位")
+                elif task_status == "processing":
+                    status_placeholder.info("🔄 正在转换中...")
+                elif task_status == "completed":
+                    status_placeholder.success("✅ 转换完成")
+                    zip_buffer, results = fp_queue.wait_for_task(task_id)
+                    break
+                else:
+                    zip_buffer, results = None, None
+                    break
+                
+                time.sleep(1)
             
-            st.session_state.result = (zip_buffer, results)
-            status_placeholder.empty()
+            if zip_buffer and results:
+                st.session_state.result = (zip_buffer, results)
+                status_placeholder.empty()
+            else:
+                status_placeholder.error("转换超时，请重试")
         
         # 显示结果
         if st.session_state.get('result'):
