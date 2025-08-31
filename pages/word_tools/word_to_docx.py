@@ -14,8 +14,8 @@ def main():
     
     
     # 初始化
-    if "key" not in st.session_state:
-        st.session_state.key = 0
+    if "word_docx_key" not in st.session_state:
+        st.session_state.word_docx_key = 0
     
     st.title("📄 Word DOC 转 DOCX 工具")
     st.markdown("将 .doc 格式文件转换为 .docx 格式")
@@ -26,19 +26,19 @@ def main():
         type=['doc'],
         accept_multiple_files=True,
         help="支持单个或多个 .doc 文件上传，使用 LibreOffice 转换引擎",
-        key=f"uploader_{st.session_state.key}"
+        key=f"uploader_{st.session_state.word_docx_key}"
     )
     
     if uploaded_files:
         file_count = len(uploaded_files)
         st.info(f"📄 已选择 {file_count} 个DOC文件")
         
-        if st.button("🔄 开始转换", type="primary", use_container_width=True, disabled="task_running" in st.session_state):
-            st.session_state.task_running = True
+        if st.button("🔄 开始转换", type="primary", use_container_width=True, disabled="word_docx_task_running" in st.session_state):
+            st.session_state.word_docx_task_running = True
             st.rerun()
         
         # 处理任务
-        if st.session_state.get('task_running') and not st.session_state.get('result'):
+        if st.session_state.get('word_docx_task_running') and not st.session_state.get('word_docx_result'):
             files_data = [(file.name, file.getvalue()) for file in uploaded_files]
             task_id = lo_queue.submit_task(files_data, 'doc', 'docx')
             
@@ -75,14 +75,14 @@ def main():
                         else:
                             results.append([filename, f'❌ {error}'])
                 
-                st.session_state.result = (zip_buffer, results)
+                st.session_state.word_docx_result = (zip_buffer, results)
                 status_placeholder.empty()
             else:
                 status_placeholder.error("转换超时，请重试")
         
         # 显示结果
-        if st.session_state.get('result'):
-            zip_buffer, results = st.session_state.result
+        if st.session_state.get('word_docx_result'):
+            zip_buffer, results = st.session_state.word_docx_result
             success_count = sum(1 for r in results if r[1].startswith('✅'))
             
             st.success("✅ 转换完成!")
@@ -101,9 +101,9 @@ def main():
                     st.download_button("📥 下载转换文件", zip_buffer.getvalue(), filename, "application/zip", type="primary", use_container_width=True)
                 with col2:
                     if st.button("🔄 重置页面", type="secondary", use_container_width=True):
-                        st.session_state.key += 1
-                        st.session_state.pop('result', None)
-                        st.session_state.pop('task_running', None)
+                        st.session_state.word_docx_key += 1
+                        st.session_state.pop('word_docx_result', None)
+                        st.session_state.pop('word_docx_task_running', None)
                         st.rerun()
 
 

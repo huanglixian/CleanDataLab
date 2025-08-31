@@ -125,8 +125,8 @@ def main():
     apply_custom_style()
     
     # 初始化
-    if "key" not in st.session_state:
-        st.session_state.key = 0
+    if "excel_title_key" not in st.session_state:
+        st.session_state.excel_title_key = 0
     
     st.title("🧹 Excel 标题表头清理工具")
     st.markdown("自动删除表格标题，处理多行表头合并和左侧合并单元格填充")
@@ -152,7 +152,7 @@ def main():
         type=['xlsx'],
         accept_multiple_files=True,
         help="只支持.xlsx格式以确保处理质量，如有.xls文件请先转换为.xlsx",
-        key=f"uploader_{st.session_state.key}"
+        key=f"uploader_{st.session_state.excel_title_key}"
     )
    
     if uploaded_files:
@@ -174,12 +174,12 @@ def main():
         df_preview = pd.DataFrame(file_info, columns=['文件名', '检测边界', '行数', '列数'])
         st.dataframe(df_preview, use_container_width=True, hide_index=True)
         
-        if st.button("🧹 开始清洗", type="primary", use_container_width=True, disabled="task_running" in st.session_state):
-            st.session_state.task_running = True
+        if st.button("🧹 开始清洗", type="primary", use_container_width=True, disabled="excel_title_task_running" in st.session_state):
+            st.session_state.excel_title_task_running = True
             st.rerun()
         
         # 处理任务
-        if st.session_state.get('task_running') and not st.session_state.get('result'):
+        if st.session_state.get('excel_title_task_running') and not st.session_state.get('excel_title_result'):
             files_data = [(f, f.name, title_check_rows, max_value_cols, header_rows) for f in uploaded_files]
             task_id = fp_queue.submit_task(files_data, process_files_batch)
             
@@ -205,14 +205,14 @@ def main():
                 time.sleep(1)
             
             if zip_buffer and results:
-                st.session_state.result = (zip_buffer, results)
+                st.session_state.excel_title_result = (zip_buffer, results)
                 status_placeholder.empty()
             else:
                 status_placeholder.error("清洗超时，请重试")
         
         # 显示结果
-        if st.session_state.get('result'):
-            zip_buffer, results = st.session_state.result
+        if st.session_state.get('excel_title_result'):
+            zip_buffer, results = st.session_state.excel_title_result
             success_count = sum(1 for r in results if r and len(r) > 4 and r[4] and r[4].startswith('✅'))
             failed_count = len(results) - success_count
             
@@ -235,9 +235,9 @@ def main():
                                      type="primary", use_container_width=True)
                 with col2:
                     if st.button("🔄 重置页面", type="secondary", use_container_width=True):
-                        st.session_state.key += 1
-                        st.session_state.pop('result', None)
-                        st.session_state.pop('task_running', None)
+                        st.session_state.excel_title_key += 1
+                        st.session_state.pop('excel_title_result', None)
+                        st.session_state.pop('excel_title_task_running', None)
                         st.rerun()
                 
                 st.info("💡 已将Excel和JSON文件分别放在excel和json文件夹中")

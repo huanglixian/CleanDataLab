@@ -28,9 +28,10 @@ st.markdown("""
 
 ### 4. 添加队列和交互优化
 - **选择队列**：LibreOffice任务用 `lo_queue`，其他文件处理用 `fp_queue`
-- **按钮防误点击**：转换按钮加 `disabled="task_running" in st.session_state`，点击时设置状态并刷新
-- **添加重置按钮**：下载区域添加重置按钮，清理 `result` 和 `task_running` 状态
-- **文件上传器重置**：使用 `key=f"uploader_{st.session_state.key}"` 实现重置
+- **状态隔离**：每个工具使用独立前缀，如 `tool_prefix_key`、`tool_prefix_result`、`tool_prefix_task_running`
+- **按钮防误点击**：转换按钮加 `disabled="tool_prefix_task_running" in st.session_state`，点击时设置状态并刷新
+- **添加重置按钮**：下载区域添加重置按钮，清理 `tool_prefix_result` 和 `tool_prefix_task_running` 状态
+- **文件上传器重置**：使用 `key=f"uploader_{st.session_state.tool_prefix_key}"` 实现重置
             
 ### 5. 对新应用增加说明
 （1）**更新readme.md**：应用创建后，需要更新根目录下的`readme.md`文件，添加应用说明
@@ -41,14 +42,38 @@ st.markdown("""
 import streamlit as st
 from common.ui_style import apply_custom_style
 
-st.set_page_config(page_title="功能名称", layout="centered")
-apply_custom_style()
+def main():
+    st.set_page_config(page_title="功能名称", layout="centered")
+    apply_custom_style()
+    
+    # 初始化（使用工具独立前缀）
+    if "tool_prefix_key" not in st.session_state:
+        st.session_state.tool_prefix_key = 0
+    
+    st.title("功能名称")
+    st.markdown("功能描述")
+    st.markdown("---")
+    
+    # 文件上传器
+    uploaded_files = st.file_uploader(
+        "选择文件",
+        key=f"uploader_{st.session_state.tool_prefix_key}"
+    )
+    
+    # 转换按钮（防误点击）
+    if st.button("开始转换", disabled="tool_prefix_task_running" in st.session_state):
+        st.session_state.tool_prefix_task_running = True
+        st.rerun()
+    
+    # 重置按钮
+    if st.button("重置页面"):
+        st.session_state.tool_prefix_key += 1
+        st.session_state.pop('tool_prefix_result', None)
+        st.session_state.pop('tool_prefix_task_running', None)
+        st.rerun()
 
-st.title("功能名称")
-st.markdown("功能描述")
-st.markdown("---")
-
-# 功能代码...
+if __name__ == "__main__":
+    main()
 ```
 
 ## 📋 TOML配置模板

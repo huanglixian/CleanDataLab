@@ -79,8 +79,8 @@ def main():
     apply_custom_style()
     
     # 初始化
-    if "key" not in st.session_state:
-        st.session_state.key = 0
+    if "excel_split_key" not in st.session_state:
+        st.session_state.excel_split_key = 0
     
     st.title("📄 Excel Sheet 拆分工具")
     st.markdown("将多个 Sheet 的 Excel 文件拆分为独立的 Excel 文件")
@@ -91,7 +91,7 @@ def main():
         type=['xlsx'],
         accept_multiple_files=True,
         help="只支持.xlsx格式以确保样式完整保留，如有.xls文件请先转换为.xlsx",
-        key=f"uploader_{st.session_state.key}"
+        key=f"uploader_{st.session_state.excel_split_key}"
     )
     
     if uploaded_files:
@@ -120,12 +120,12 @@ def main():
         st.dataframe(df, use_container_width=True, hide_index=True)
         st.success(f"其中 {processable_count} 个文件将被拆分")
         
-        if st.button("🔄 开始拆分", type="primary", use_container_width=True, disabled="task_running" in st.session_state):
-            st.session_state.task_running = True
+        if st.button("🔄 开始拆分", type="primary", use_container_width=True, disabled="excel_split_task_running" in st.session_state):
+            st.session_state.excel_split_task_running = True
             st.rerun()
         
         # 处理任务
-        if st.session_state.get('task_running') and not st.session_state.get('result'):
+        if st.session_state.get('excel_split_task_running') and not st.session_state.get('excel_split_result'):
             files_data = [(f, f.name) for f in uploaded_files]
             task_id = fp_queue.submit_task(files_data, process_files_batch)
             
@@ -151,37 +151,42 @@ def main():
                 time.sleep(1)
             
             if zip_buffer and results:
+                st.session_state.excel_split_result = (zip_buffer, results)
                 status_placeholder.empty()
-                st.success("✅ 拆分完成!")
-                
-                # 显示结果和统计
-                st.dataframe(pd.DataFrame(results, columns=['文件名', 'Sheet数量', '状态']), use_container_width=True, hide_index=True)
-                
-                processed = sum(1 for r in results if r[2].startswith('✅'))
-                skipped = sum(1 for r in results if r[2].startswith('⏩'))
-                failed = sum(1 for r in results if r[2].startswith('❌'))
-                
-                col1, col2, col3 = st.columns(3)
-                col1.metric("已拆分", processed)
-                col2.metric("已跳过", skipped)
-                col3.metric("失败", failed)
-                
-                # 下载
-                if processed > 0:
-                    timestamp = datetime.now().strftime("%Y%m%d%H%M")
-                    filename = f"excel_sheet_拆分_{timestamp}.zip"
-                    
-                    col1, col2 = st.columns([2, 1])
-                    with col1:
-                        st.download_button("📥 下载拆分文件", zip_buffer.getvalue(), filename, "application/zip", type="primary", use_container_width=True)
-                    with col2:
-                        if st.button("🔄 重置页面", type="secondary", use_container_width=True):
-                            st.session_state.key += 1
-                            st.session_state.pop('result', None)
-                            st.session_state.pop('task_running', None)
-                            st.rerun()
             else:
                 status_placeholder.error("拆分超时，请重试")
+        
+        # 显示结果
+        if st.session_state.get('excel_split_result'):
+            zip_buffer, results = st.session_state.excel_split_result
+            st.success("✅ 拆分完成!")
+            
+            # 显示结果和统计
+            st.dataframe(pd.DataFrame(results, columns=['文件名', 'Sheet数量', '状态']), use_container_width=True, hide_index=True)
+            
+            processed = sum(1 for r in results if r[2].startswith('✅'))
+            skipped = sum(1 for r in results if r[2].startswith('⏩'))
+            failed = sum(1 for r in results if r[2].startswith('❌'))
+            
+            col1, col2, col3 = st.columns(3)
+            col1.metric("已拆分", processed)
+            col2.metric("已跳过", skipped)
+            col3.metric("失败", failed)
+            
+            # 下载
+            if processed > 0:
+                timestamp = datetime.now().strftime("%Y%m%d%H%M")
+                filename = f"excel_sheet_拆分_{timestamp}.zip"
+                
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    st.download_button("📥 下载拆分文件", zip_buffer.getvalue(), filename, "application/zip", type="primary", use_container_width=True)
+                with col2:
+                    if st.button("🔄 重置页面", type="secondary", use_container_width=True):
+                        st.session_state.excel_split_key += 1
+                        st.session_state.pop('excel_split_result', None)
+                        st.session_state.pop('excel_split_task_running', None)
+                        st.rerun()
 
 
 if __name__ == "__main__":

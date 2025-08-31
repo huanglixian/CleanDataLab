@@ -11,8 +11,8 @@ def main():
     st.set_page_config(page_title="Word DOCX 清理工具", page_icon="🧹", layout="centered")
     apply_custom_style()
     
-    if "key" not in st.session_state:
-        st.session_state.key = 0
+    if "word_clean_key" not in st.session_state:
+        st.session_state.word_clean_key = 0
     
     st.title("🧹 Word DOCX 清理工具")
     st.markdown("清理 DOCX 文件中的页眉和页脚元素")
@@ -33,7 +33,7 @@ def main():
         type=['docx'],
         accept_multiple_files=True,
         help="支持单个或多个 .docx 文件上传，将清理页眉和页脚元素",
-        key=f"uploader_{st.session_state.key}"
+        key=f"uploader_{st.session_state.word_clean_key}"
     )
     
     if uploaded_files:
@@ -81,12 +81,12 @@ def main():
                         except Exception as e:
                             results.append([uploaded_file.name, f'❌ {str(e)[:50]}'])
                 
-                st.session_state.result = (zip_buffer, results)
+                st.session_state.word_clean_result = (zip_buffer, results)
                 status_placeholder.empty()
         
         # 显示结果
-        if st.session_state.get('result'):
-            zip_buffer, results = st.session_state.result
+        if st.session_state.get('word_clean_result'):
+            zip_buffer, results = st.session_state.word_clean_result
             success_count = sum(1 for r in results if r[1].startswith('✅'))
             
             st.success("✅ 清理完成!")
@@ -105,8 +105,8 @@ def main():
                     st.download_button("📥 下载清理文件", zip_buffer.getvalue(), filename, "application/zip", type="primary", use_container_width=True)
                 with col2:
                     if st.button("🔄 重置页面", type="secondary", use_container_width=True):
-                        st.session_state.key += 1
-                        del st.session_state.result
+                        st.session_state.word_clean_key += 1
+                        del st.session_state.word_clean_result
                         st.rerun()
 
 if __name__ == "__main__":

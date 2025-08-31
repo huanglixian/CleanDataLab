@@ -59,8 +59,8 @@ def main():
     apply_custom_style()
     
     # 初始化
-    if "key" not in st.session_state:
-        st.session_state.key = 0
+    if "pdf_md_key" not in st.session_state:
+        st.session_state.pdf_md_key = 0
     
     st.title("📋 PDF 转 Markdown 工具")
     st.markdown("将 PDF 文件转换为 Markdown 格式")
@@ -71,19 +71,19 @@ def main():
         type=['pdf'],
         accept_multiple_files=True,
         help="支持单个或多个 PDF 文件上传，使用 pymupdf4llm 转换引擎",
-        key=f"uploader_{st.session_state.key}"
+        key=f"uploader_{st.session_state.pdf_md_key}"
     )
     
     if uploaded_files:
         file_count = len(uploaded_files)
         st.info(f"📋 已选择 {file_count} 个PDF文件")
         
-        if st.button("🔄 开始转换", type="primary", use_container_width=True, disabled="task_running" in st.session_state):
-            st.session_state.task_running = True
+        if st.button("🔄 开始转换", type="primary", use_container_width=True, disabled="pdf_md_task_running" in st.session_state):
+            st.session_state.pdf_md_task_running = True
             st.rerun()
         
         # 处理任务
-        if st.session_state.get('task_running') and not st.session_state.get('result'):
+        if st.session_state.get('pdf_md_task_running') and not st.session_state.get('pdf_md_result'):
             files_data = [(file.name, file.getvalue()) for file in uploaded_files]
             task_id = fp_queue.submit_task(files_data, process_files_batch)
             
@@ -109,14 +109,14 @@ def main():
                 time.sleep(1)
             
             if zip_buffer and results:
-                st.session_state.result = (zip_buffer, results)
+                st.session_state.pdf_md_result = (zip_buffer, results)
                 status_placeholder.empty()
             else:
                 status_placeholder.error("转换超时，请重试")
         
         # 显示结果
-        if st.session_state.get('result'):
-            zip_buffer, results = st.session_state.result
+        if st.session_state.get('pdf_md_result'):
+            zip_buffer, results = st.session_state.pdf_md_result
             success_count = sum(1 for r in results if r[1].startswith('✅'))
             
             st.success("✅ 转换完成!")
@@ -135,9 +135,9 @@ def main():
                     st.download_button("📥 下载转换文件", zip_buffer.getvalue(), filename, "application/zip", type="primary", use_container_width=True)
                 with col2:
                     if st.button("🔄 重置页面", type="secondary", use_container_width=True):
-                        st.session_state.key += 1
-                        st.session_state.pop('result', None)
-                        st.session_state.pop('task_running', None)
+                        st.session_state.pdf_md_key += 1
+                        st.session_state.pop('pdf_md_result', None)
+                        st.session_state.pop('pdf_md_task_running', None)
                         st.rerun()
                 
                 st.markdown("**如对转换效果不满意（复杂PDF），请跳转[MinerU](https://mineru.net/OpenSourceTools/Extractor)**")
