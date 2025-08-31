@@ -6,12 +6,14 @@ import shutil
 import time
 import uuid
 from typing import List, Tuple, Optional
+from .libreoffice_path import get_libreoffice_path
 
 
 class LibreOfficeQueue:
     """LibreOffice转换队列，单例模式"""
     _instance = None
     _lock = threading.Lock()
+    
     
     def __new__(cls):
         if cls._instance is None:
@@ -58,8 +60,8 @@ class LibreOfficeQueue:
                     f.write(content)
                 input_paths.append((path, filename))
             
-            cmd = ['/Applications/LibreOffice.app/Contents/MacOS/soffice',
-                   '--headless', '--convert-to', target_ext, '--outdir', temp_dir]
+            libreoffice_path = get_libreoffice_path()
+            cmd = [libreoffice_path, '--headless', '--convert-to', target_ext, '--outdir', temp_dir]
             cmd.extend([path for path, _ in input_paths])
             subprocess.run(cmd, check=True, timeout=120)
             

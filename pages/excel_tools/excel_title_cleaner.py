@@ -213,7 +213,7 @@ def main():
         # 显示结果
         if st.session_state.get('result'):
             zip_buffer, results = st.session_state.result
-            success_count = sum(1 for r in results if r[4].startswith('✅'))
+            success_count = sum(1 for r in results if r and len(r) > 4 and r[4] and r[4].startswith('✅'))
             failed_count = len(results) - success_count
             
             st.success("✅ 清洗完成!")

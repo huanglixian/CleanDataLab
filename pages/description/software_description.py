@@ -5,7 +5,7 @@ st.set_page_config(page_title="软件说明", layout="centered")
 apply_custom_style()
 
 st.title("数据预处理工具集")
-st.markdown("专业的Excel数据处理解决方案")
+st.markdown("专业的数据预处理解决方案")
 st.markdown("---")
 
 # 读取并显示README.md内容
